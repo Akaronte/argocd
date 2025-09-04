@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  argocd:
+    image: quay.io/argoproj/argocd:v2.12.3 
+    container_name: argocd
+    ports:
+      - "8080:8080"  
+      - "8081:8081"   
+    volumes:
+      - ./data/argocd:/var/lib/argocd  
+    command: ["argocd-server", "--insecure"] 
+    restart: unless-stopped
