@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   argocd:
     image: quay.io/argoproj/argocd:v2.12.3 
@@ -8,6 +6,7 @@ services:
       - "8080:8080"  
       - "8081:8081"   
     volumes:
-      - ./data/argocd:/var/lib/argocd  
+      - ./data/argocd:/var/lib/argocd
+      - ./kubeconfig.yaml:/app/config/kubeconfig.yaml  
     command: ["argocd-server", "--insecure"] 
     restart: unless-stopped
