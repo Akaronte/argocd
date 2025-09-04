@@ -1,16 +1,41 @@
+version: '3.7'
+
 services:
-  argocd:
-    image: quay.io/argoproj/argocd:v2.12.3 
-    container_name: argocd
-    environment:
-      - ARGOCD_API_SERVER_INSECURE=true
-      - KUBERNETES_MASTER=https://kubernetes.default.svc
-      - ARGOCD_KUBE_CONFIG_PATH=/app/config/kubeconfig.yaml
+  argocd-server:
+    image: argoproj/argocd:latest
+    container_name: argocd-server
     ports:
-      - "8080:8080"  
-      - "8082:8081"   
+      - "8080:8080"  # Argo CD UI
+      - "8081:8081"  # Argo CD API
+    environment:
+      - ARGOCD_API_SERVER=argocd-server:8081
+      - ARGOCD_UI_SERVER=argocd-server:8080
+      - KUBECONFIG=/app/config/kubeconfig.yaml
+      - KUBERNETES_MASTER=https://api.kube1.okd.piensoluegoinstalo.com:6443
     volumes:
-      - ./data/argocd:/var/lib/argocd
-      - ./kubeconfig.yaml:/app/config/kubeconfig.yaml  
-    command: ["argocd-server", "--insecure"] 
-    restart: unless-stopped
+      - argocd-data:/app/config
+      - ./kubeconfig.yaml:/app/config/kubeconfig.yaml
+    command:
+      - argocd-server
+      - --insecure
+    depends_on:
+      - argocd-repo-server
+      - argocd-redis
+
+  argocd-repo-server:
+    image: argoproj/argocd:latest
+    container_name: argocd-repo-server
+    environment:
+      - ARGOCD_API_SERVER=argocd-server:8081
+    volumes:
+      - ./argocd-data:/app/config
+    command:
+      - argocd-repo-server
+
+  argocd-redis:
+    image: redis:alpine
+    container_name: argocd-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
